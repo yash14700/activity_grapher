@@ -1,0 +1,56 @@
+<html>
+    <head>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    </head>
+    <body>
+        <p>Test</p>
+        <!-- 
+            Place to upload a file and 
+        -->
+        <label for="graph_file">Upload excel file to use for graphing</label>
+        <br>
+        <input type="file" id="graph_file" name="graph_file" />
+        <br>
+        <br>
+        <br>
+        <br>
+    </body>
+    <script>
+        const submit_action = () => {
+            console.log("ran")
+            const uploadFileEle = document.getElementById("graph_file")
+            console.log(uploadFileEle.files[0]);
+
+            let file = uploadFileEle.files[0];
+            let formData = new FormData();
+            formData.set('file', file);
+
+            axios.post("/graph", formData)
+            .then(
+                response => {
+                    console.log(response)
+                    var url = "data:image/png;base64,"+response.data['image'];
+                    var download = document.createElement('a');
+                    download.href = url
+                    download.download = 'graph.png';
+                    download.text = "Click to download image"
+                    download.style.height = "50px"
+                    document.body.append(download)
+
+                    var img = new Image()
+                    img.src = url
+                    document.body.append(img)
+                    // fetch(url)
+                    // .then(res => res.blob())
+                    // .then(blob => {
+                    //     const objectURL = URL.createObjectURL(blob);
+                    //     window.location.href = objectURL;
+                    // })
+            })
+        }
+
+        document.getElementById("graph_file").onchange = submit_action
+
+    </script>
+    
+</html>
