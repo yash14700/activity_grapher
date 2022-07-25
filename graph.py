@@ -13,8 +13,8 @@ To do:
 from openpyxl import load_workbook
 import numpy as np
 import matplotlib.pyplot as plt
-from tkinter import Tk
-from tkinter.filedialog import askopenfilename
+# from tkinter import Tk
+# from tkinter.filedialog import askopenfilename
 import sys
 
 SHOW_COUNT = False
@@ -24,13 +24,13 @@ RED_THRESHOLD = 10
 # Get data from the excel file and then turn into a plot
 def run_graphing(input_filename=''):
     filename = input_filename
-    if input_filename == '':
-        Tk().withdraw()
-        filetypes = (
-                ('Excel', '*.xl*'),
-                ('All files', '*.*')
-            )
-        filename = askopenfilename(filetypes=filetypes)
+    # if input_filename == '':
+    #     Tk().withdraw()
+    #     filetypes = (
+    #             ('Excel', '*.xl*'),
+    #             ('All files', '*.*')
+    #         )
+    #     filename = askopenfilename(filetypes=filetypes)
 
     wb = load_workbook(filename)
 
