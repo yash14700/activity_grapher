@@ -10,9 +10,6 @@ To do:
 - think about introduce multiple groups?
 """
 
-from cProfile import run
-import os
-from time import time
 from openpyxl import load_workbook
 import numpy as np
 import matplotlib.pyplot as plt

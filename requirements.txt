@@ -1,0 +1,5 @@
+openpyxl==3.0.9
+numpy
+matplotlib==3.5.2
+tk==0.1.0
+Flask==2.1.3
