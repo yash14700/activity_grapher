@@ -3,39 +3,88 @@
         <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     </head>
     <body>
-        <label for="graph_file">Upload excel file to use for graphing</label>
-        <br>
-        <input type="file" id="graph_file" name="graph_file" />
-        <br>
-        <br>
-        <br>
-        <br>
+        <div>
+            <p>Threshold for high activity (marked red if greater than or equal to threshold)</p>
+            <input type="number" id="high_threshold" value="10"/>
+        </div>
+
+        <div>
+            <p>Threshold for medium activity (marked blue if greater than or equal to threshold)</p>
+            <input type="number" id="medium_threshold" value="5"/>
+        </div>
+
+        <div>
+            <p>Show activity counts on graph:</p>
+            <input type="radio" id="false" name="show_count" value="False" checked>
+            <label for="false">False</label><br>
+            <br>
+            <input type="radio" id="true" name="show_count" value="True">
+            <label for="true">True</label><br>
+            <br>
+        </div>
+        
+        <div>
+            <p>Upload excel file to use for graphing</p>
+            <input type="file" id="graph_file" name="graph_file" />
+        </div>
+
+        <div style="padding-top: 20px; padding-bottom: 20px;">
+            <button id="graph_button">Generate Graph</button>
+        </div>
+        
     </body>
     <script>
         const submit_action = () => {
             console.log("ran")
             const uploadFileEle = document.getElementById("graph_file")
-            console.log(uploadFileEle.files[0]);
+            const high_threshold = document.getElementById("high_threshold").value
+            const medium_threshold = document.getElementById("medium_threshold").value
+            const show_count = document.getElementById("true").checked
 
             let file = uploadFileEle.files[0];
             let formData = new FormData();
             formData.set('file', file);
+            formData.set('high_threshold', high_threshold)
+            formData.set('medium_threshold', medium_threshold)
+            if (show_count) {
+                formData.set('show_count', true)
+            }
 
             axios.post("/graph", formData)
             .then(
                 response => {
                     console.log(response)
                     var url = "data:image/png;base64,"+response.data['image'];
-                    var download = document.createElement('a');
-                    download.href = url
-                    download.download = 'graph.png';
-                    download.text = "Click to download image"
-                    download.style.height = "50px"
-                    document.body.append(download)
 
-                    var img = new Image()
-                    img.src = url
-                    document.body.append(img)
+                    var download_id = "download_link"
+                    var img_id = "graph_img"
+
+                    existing_download_link = document.getElementById(download_id)
+                    if (existing_download_link) {
+                        existing_download_link.href = url
+                    }
+                    else {
+                        var download = document.createElement('a');
+                        download.id = download_id
+                        download.href = url
+                        download.download = 'graph.png';
+                        download.text = "Click to download image"
+                        download.style.height = "50px"
+                        document.body.append(download)
+                    }
+                    
+                    existing_image = document.getElementById(img_id)
+                    if (existing_image) {
+                        existing_image.src = url
+                        img.style.width = "100%"
+                    } else {
+                        var img = new Image()
+                        img.id = img_id
+                        img.src = url
+                        img.style.width = "100%"
+                        document.body.append(img)
+                    }
+                    
                     // fetch(url)
                     // .then(res => res.blob())
                     // .then(blob => {
@@ -45,7 +94,7 @@
             })
         }
 
-        document.getElementById("graph_file").onchange = submit_action
+        document.getElementById("graph_button").onclick = submit_action
 
     </script>
     

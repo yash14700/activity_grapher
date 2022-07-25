@@ -8,6 +8,8 @@ Goal is to create a spike raster plot from the excel file
 """
 To do:
 - think about introduce multiple groups?
+- Make the thresholds into a config file that is used both on the frontend and backend
+- Enable showing count via api
 """
 
 from openpyxl import load_workbook
@@ -17,12 +19,9 @@ import matplotlib.pyplot as plt
 # from tkinter.filedialog import askopenfilename
 import sys
 
-SHOW_COUNT = False
-blue_THRESHOLD = 5
-RED_THRESHOLD = 10
 
 # Get data from the excel file and then turn into a plot
-def run_graphing(input_filename=''):
+def run_graphing(input_filename='', blue_THRESHOLD = 5, RED_THRESHOLD = 10, SHOW_COUNT = False):
     filename = input_filename
     # if input_filename == '':
     #     Tk().withdraw()

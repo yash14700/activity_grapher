@@ -12,7 +12,6 @@ def home():
 
 @app.route('/graph', methods=['POST'])
 def generate_graph():
-    print("received input")
     if 'file' not in request.files:
         flash('No file part')
         return redirect(request.url)
@@ -24,7 +23,21 @@ def generate_graph():
     filename = secure_filename(file.filename)
     saved_filename = 'test_'+filename
     file.save(saved_filename)
-    img_file = run_graphing(saved_filename)
+
+    # generate graph
+    high_threshold = 10
+    medium_threshold = 5
+    show_count = False
+    if 'high_threshold' in request.form:
+        high_threshold = int(request.form['high_threshold'])
+    if 'medium_threshold' in request.form:
+        medium_threshold = int(request.form['medium_threshold'])
+    if 'show_count' in request.form:
+        show_count = True
+    img_file = run_graphing(saved_filename, blue_THRESHOLD=medium_threshold, RED_THRESHOLD=high_threshold, SHOW_COUNT=show_count)
+
+
+
     image = ''
     with open(img_file, "rb") as f:
         image_binary = f.read()
