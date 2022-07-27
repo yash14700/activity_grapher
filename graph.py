@@ -7,9 +7,9 @@ Goal is to create a spike raster plot from the excel file
 
 """
 To do:
-- think about introduce multiple groups?
-- Make the thresholds into a config file that is used both on the frontend and backend
-- Enable showing count via api
+- compute PE's per hours by "counting total PEs and total number of hours sleeping per fly"
+- add this computation somewhere to the graph
+- should I also make the computation accessible in some way?
 """
 
 from openpyxl import load_workbook
@@ -53,18 +53,20 @@ def run_graphing(input_filename='', blue_THRESHOLD = 5, RED_THRESHOLD = 10, SHOW
                 raw.append(raw_row)
         return raw
 
-    # sleeping times
-    # TODO(yash14700@gmail.com): finish this
-
+    # get sleeping points
     sheet = wb.worksheets[sleepsheet_idx].values
     raw = get_raw(sheet)
 
     num_flies = len(raw[1:])
     data_for_plot = list()
+    # list of total sleep for each fly
+    total_sleep_hours_per_fly = list()
 
     prev_start = 0
 
     for fly_idx in range(len(raw[1:])):
+        # total sleep time for a given fly
+        total_fly_sleep_time_in_minutes = 0
         fly = raw[1:][fly_idx]
         fly = fly[1:]
         fly_sleep_times = list()
@@ -74,9 +76,12 @@ def run_graphing(input_filename='', blue_THRESHOLD = 5, RED_THRESHOLD = 10, SHOW
             else:
                 end_time = int(fly[time_idx].seconds / 60)
                 if end_time > prev_start:
+                    total_fly_sleep_time_in_minutes += end_time - prev_start
                     fly_sleep_times.extend(list(range(prev_start, end_time)))
                 prev_start = end_time
-        
+
+        total_fly_sleep_time_in_hours = total_fly_sleep_time_in_minutes / 60.0
+        total_sleep_hours_per_fly.append(total_fly_sleep_time_in_hours)
         data_for_plot.append(fly_sleep_times)
 
     ws = wb.worksheets[activitysheet_idx]
@@ -93,6 +98,7 @@ def run_graphing(input_filename='', blue_THRESHOLD = 5, RED_THRESHOLD = 10, SHOW
         return type(val) == type('')
 
     text_for_plot = list()
+    total_counts_per_fly = list()
     y_labels = []
     raw = np.array(raw)
     y_height = 0.3
@@ -100,6 +106,7 @@ def run_graphing(input_filename='', blue_THRESHOLD = 5, RED_THRESHOLD = 10, SHOW
     blue_points = []
     red_points = []
     for fly in raw[3:]:
+        total_count_for_given_fly = 0
         fly_times = []
         fly_text = []
         prev_val = 0
@@ -115,6 +122,8 @@ def run_graphing(input_filename='', blue_THRESHOLD = 5, RED_THRESHOLD = 10, SHOW
                     y_labels.append(fly_title)
                     continue
                 # can asssume its the number of times we want to print the previous value
+
+                total_count_for_given_fly += count
                 text_for_plot.append((prev_val, y_height, count))
                 for i in range(count):
                     if count < blue_THRESHOLD:
@@ -126,10 +135,15 @@ def run_graphing(input_filename='', blue_THRESHOLD = 5, RED_THRESHOLD = 10, SHOW
                     prev_val += 1.5 / 60
     
         data_for_plot.append(fly_times)
+        total_counts_per_fly.append(total_count_for_given_fly)
         blue_points.append(per_fly_blue)
         red_points.append(per_fly_red)
         y_height+=1
 
+    ## Update y_lables to show the average PEs per sleeping hours
+    for label_idx in range(len(y_labels)):
+        pes_per_sleeping_hour = total_counts_per_fly[label_idx]/total_sleep_hours_per_fly[label_idx]
+        y_labels[label_idx] += (' '+"({:.2f})".format(pes_per_sleeping_hour))
 
     # add all blue points across flies
     data_for_plot.extend(blue_points)
@@ -192,3 +206,6 @@ def run_graphing(input_filename='', blue_THRESHOLD = 5, RED_THRESHOLD = 10, SHOW
     #     ax.figure.canvas.draw()
 
     return final_file
+
+# if __name__ == '__main__':
+#     run_graphing('graphing_template.xlsx')
