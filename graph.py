@@ -21,7 +21,7 @@ import sys
 
 
 # Get data from the excel file and then turn into a plot
-def run_graphing(input_filename='', blue_THRESHOLD = 5, RED_THRESHOLD = 10, SHOW_COUNT = False):
+def run_graphing(input_filename='', blue_THRESHOLD = 5, RED_THRESHOLD = 10, SHOW_COUNT = False, SINKING_ACTIVITY=False):
     filename = input_filename
     # if input_filename == '':
     #     Tk().withdraw()
@@ -35,6 +35,7 @@ def run_graphing(input_filename='', blue_THRESHOLD = 5, RED_THRESHOLD = 10, SHOW
 
     activitysheet_idx =  1
     sleepsheet_idx = 2
+    sinking_idx = 3
 
     def is_start_time(time_idx):
         return time_idx % 2 == 0
@@ -84,12 +85,36 @@ def run_graphing(input_filename='', blue_THRESHOLD = 5, RED_THRESHOLD = 10, SHOW
         total_sleep_hours_per_fly.append(total_fly_sleep_time_in_hours)
         data_for_plot.append(fly_sleep_times)
 
-    ws = wb.worksheets[activitysheet_idx]
-    sheet = ws.values
 
-    raw = get_raw(sheet)
+    # Sinking points
+    if SINKING_ACTIVITY:
+        sheet = wb.worksheets[sinking_idx].values
+        raw = get_raw(sheet)
+
+        prev_start = 0
+
+        for fly_idx in range(num_flies):
+            fly = raw[1:][fly_idx]
+            fly = fly[1:]
+
+            fly_sink_times = list()
+            for time_idx in range(len(fly)):
+                if is_start_time(time_idx):
+                    prev_start = int(fly[time_idx].seconds / 60)
+                else:
+                    end_time = int(fly[time_idx].seconds / 60)
+                    if end_time > prev_start:
+                        fly_sink_times.extend(list(range(prev_start, end_time)))
+                    prev_start = end_time
+
+            data_for_plot.append(fly_sink_times)
+    
+
 
     # proboscis points
+    ws = wb.worksheets[activitysheet_idx]
+    sheet = ws.values
+    raw = get_raw(sheet)
 
     def is_time(time_idx):
         return time_idx % 2 == 1
@@ -153,17 +178,30 @@ def run_graphing(input_filename='', blue_THRESHOLD = 5, RED_THRESHOLD = 10, SHOW
     # plotting
     fig, ax = plt.subplots()
     # print(data_for_plot)
+
+    """
+    If there is a sinking sheet, we want to include the colors and created offsets for sinking sheet
+    if there isn't one, we don't want to incldude these
+
+    I'm using a trick that True is treated as the number 1 and false the number 0, to acheive this by subtracting 1 from the
+    splicing when there is no sinking
+    """
+    ONE_IF_NO_SINKING = not SINKING_ACTIVITY
     colors = np.random.rand(len(data_for_plot), 3)
     colors[:num_flies] = [0.75,0.75,0.75] # sleeping gray
-    colors[num_flies:2*num_flies] = [0,0,0] #regular black
-    colors[2*num_flies : 3*num_flies] = [0,0,1] # blue
-    colors[3*num_flies:] = [1,0,0] # red
+    if SINKING_ACTIVITY:
+        colors[num_flies:(2-ONE_IF_NO_SINKING)*num_flies] = [0.97, 0.99, 0.50] # sinking yellow
+    colors[(2-ONE_IF_NO_SINKING)*num_flies : (3-ONE_IF_NO_SINKING)*num_flies] = [0,0,0] #regular black
+    colors[(3-ONE_IF_NO_SINKING)*num_flies:(4-ONE_IF_NO_SINKING)*num_flies] = [0,0,1] # blue
+    colors[(4-ONE_IF_NO_SINKING)*num_flies:] = [1,0,0] # red
 
     created_offsets = np.random.rand(len(data_for_plot))
     created_offsets[:num_flies] = list(range(num_flies)) # sleeping gray
-    created_offsets[num_flies:2*num_flies] = list(range(num_flies)) # regular black
-    created_offsets[2*num_flies:3*num_flies] = list(range(num_flies)) # blue threshold
-    created_offsets[3*num_flies:] = list(range(num_flies)) # red threshold
+    if SINKING_ACTIVITY:
+        created_offsets[num_flies:(2-ONE_IF_NO_SINKING)*num_flies] = list(range(num_flies)) # sinking yell
+    created_offsets[(2-ONE_IF_NO_SINKING)*num_flies:(3-ONE_IF_NO_SINKING)*num_flies] = list(range(num_flies)) # regular black
+    created_offsets[(3-ONE_IF_NO_SINKING)*num_flies:(4-ONE_IF_NO_SINKING)*num_flies] = list(range(num_flies)) # blue threshold
+    created_offsets[(4-ONE_IF_NO_SINKING)*num_flies:] = list(range(num_flies)) # red threshold
 
     #reverse everything
     # data_for_plot = list(reversed(data_for_plot))

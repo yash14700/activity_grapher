@@ -28,13 +28,16 @@ def generate_graph():
     high_threshold = 10
     medium_threshold = 5
     show_count = False
+    sinking_activity = False
     if 'high_threshold' in request.form:
         high_threshold = int(request.form['high_threshold'])
     if 'medium_threshold' in request.form:
         medium_threshold = int(request.form['medium_threshold'])
     if 'show_count' in request.form:
         show_count = True
-    img_file = run_graphing(saved_filename, blue_THRESHOLD=medium_threshold, RED_THRESHOLD=high_threshold, SHOW_COUNT=show_count)
+    if 'sinking_activity' in request.form:
+        sinking_activity = True
+    img_file = run_graphing(saved_filename, blue_THRESHOLD=medium_threshold, RED_THRESHOLD=high_threshold, SHOW_COUNT=show_count, SINKING_ACTIVITY=sinking_activity)
 
 
 

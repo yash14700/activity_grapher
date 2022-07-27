@@ -15,10 +15,20 @@
 
         <div>
             <p>Show activity counts on graph:</p>
-            <input type="radio" id="false" name="show_count" value="False" checked>
+            <input type="radio" id="false_count" name="show_count" value="False" checked>
             <label for="false">False</label><br>
             <br>
-            <input type="radio" id="true" name="show_count" value="True">
+            <input type="radio" id="true_count" name="show_count" value="True">
+            <label for="true">True</label><br>
+            <br>
+        </div>
+
+        <div>
+            <p>Show sinking on graph:</p>
+            <input type="radio" id="false_sinking" name="sinking_activity" value="False" checked>
+            <label for="false">False</label><br>
+            <br>
+            <input type="radio" id="true_sinking" name="sinking_activity" value="True">
             <label for="true">True</label><br>
             <br>
         </div>
@@ -39,7 +49,8 @@
             const uploadFileEle = document.getElementById("graph_file")
             const high_threshold = document.getElementById("high_threshold").value
             const medium_threshold = document.getElementById("medium_threshold").value
-            const show_count = document.getElementById("true").checked
+            const show_count = document.getElementById("true_count").checked
+            const sinking_activity = document.getElementById("true_sinking").checked
 
             let file = uploadFileEle.files[0];
             let formData = new FormData();
@@ -48,6 +59,9 @@
             formData.set('medium_threshold', medium_threshold)
             if (show_count) {
                 formData.set('show_count', true)
+            }
+            if (sinking_activity) {
+                formData.set('sinking_activity', true)
             }
 
             axios.post("/graph", formData)
